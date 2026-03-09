@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowStrike Penetration Test Report — auravoice.uk</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-lighter: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #dc2626;
+            --border: #e2e8f0;
+            
+            --critical: #ef4444;
+            --high: #f97316;
+            --medium: #eab308;
+            --low: #3b82f6;
+            --info: #64748b;
+        }
+
+        @media screen and (prefers-color-scheme: dark) {
+            :root {
+                --bg-dark: #09090b;
+                --bg-card: #121214;
+                --bg-lighter: #18181b;
+                --text-main: #e4e4e7;
+                --text-muted: #a1a1aa;
+                --primary: #ef4444;
+                --border: #27272a;
+            }
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); line-height: 1.6; }
+        
+        h1, h2, h3 { font-family: 'Cinzel', serif; font-weight: 700; color: var(--text-main); }
+        code, pre { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+        
+        header {
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            border-bottom: 4px solid var(--primary);
+            padding: 80px 0 60px;
+            color: #fff;
+            position: relative;
+        }
+        
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; position: relative; z-index: 2; }
+        
+        .logo-wrap { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+        .logo { font-family: 'Cinzel', serif; font-size: 2.5rem; font-weight: 700; letter-spacing: 2px; }
+        .logo span { color: var(--primary); }
+        .classification { font-size: 0.8rem; letter-spacing: 2px; font-weight: 600; color: var(--primary); border: 1px solid var(--primary); padding: 4px 12px; border-radius: 4px; text-transform: uppercase; }
+        
+        .report-title { font-size: 3rem; margin-bottom: 10px; line-height: 1.2; font-family: 'Inter', sans-serif; font-weight: 700; letter-spacing: -1px; }
+        .report-subtitle { font-size: 1.2rem; color: #94a3b8; font-weight: 300; letter-spacing: 1px; }
+        
+        .exec-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; margin-top: -30px; position: relative; z-index: 10; }
+        
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .card-header { font-size: 1.4rem; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--border); letter-spacing: 0.5px; text-transform: uppercase; }
+        
+        .info-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        .info-table td { padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .info-table td:first-child { color: var(--text-muted); font-weight: 500; width: 40%; }
+        .info-table td:last-child { text-align: right; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        
+        .score-circle { width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; margin: 0 auto 25px; border: 8px solid #f59e0b; box-shadow: 0 0 20px #f59e0b40; }
+        .score-val { font-size: 3rem; font-family: 'Inter', sans-serif; font-weight: 800; color: #f59e0b; line-height: 1; }
+        .score-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-top: 5px; }
+        
+        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 0.95rem; }
+        .stat-row:last-child { border: none; padding-bottom: 0; }
+        .stat-num { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        
+        .findings-title { margin-top: 60px; margin-bottom: 30px; font-size: 2rem; border-bottom: 3px solid var(--border); padding-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .finding-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 35px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); page-break-inside: avoid; }
+        
+        .finding-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .finding-title { display: flex; align-items: flex-start; gap: 15px; }
+        .finding-num { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; }
+        .finding-title h3 { font-size: 1.3rem; line-height: 1.3; font-family: 'Inter', sans-serif; font-weight: 700; }
+        
+        .badge { padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .module-badge { background: var(--bg-lighter); color: var(--text-muted); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; border: 1px solid var(--border); font-weight: 600; }
+        
+        .finding-meta { margin-bottom: 25px; }
+        
+        .finding-desc strong { display: inline-block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; }
+        .finding-desc p { font-size: 1rem; color: var(--text-main); line-height: 1.6; margin-bottom: 20px; }
+        
+        .impact-block { background: rgba(220, 38, 38, 0.05); border-left: 4px solid var(--primary); padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 25px; }
+        .impact-title { color: var(--primary); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .impact-block p { color: var(--text-main); font-weight: 500; margin: 0; font-size: 0.95rem; line-height: 1.5; }
+        
+        .evidence { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 25px; overflow-x: auto; box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); }
+        .evidence-title { color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .evidence pre { color: #10b981; margin: 0; line-height: 1.5; }
+        
+        .finding-rem { background: var(--bg-lighter); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+        .rem-title { color: #0284c7; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .finding-rem p { margin: 0; font-size: 0.95rem; line-height: 1.5; }
+        
+        footer { margin-top: 80px; padding: 40px 0; text-align: center; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+        
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            .container { width: 100% !important; max-width: none !important; padding: 0 20px !important; }
+            .card, .finding-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+            header { background: #0f172a !important; color: #fff !important; padding: 40px 0 !important; -webkit-print-color-adjust: exact; }
+            .impact-block { background: #fff5f5 !important; -webkit-print-color-adjust: exact; border-left: 4px solid #dc2626 !important; }
+            .evidence { background: #111 !important; color: #0f0 !important; -webkit-print-color-adjust: exact; }
+            .score-circle { border: 8px solid #f59e0b !important; -webkit-print-color-adjust: exact; }
+            .logo span { color: #dc2626 !important; }
+            .classification { color: #dc2626 !important; border-color: #dc2626 !important; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo-wrap">
+                <div class="logo">SHADOW<span>STRIKE</span></div>
+                <div class="classification">CONFIDENTIAL</div>
+            </div>
+            <div class="report-title">Security End-of-Test Report</div>
+            <div class="report-subtitle">Automated Penetration Test & Reconnaissance</div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="exec-grid">
+            <div class="card">
+                <h2 class="card-header">Target Overview</h2>
+                <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem;">
+                    This highly restricted document outlines the external attack surface, exposed vulnerabilities, and security posture of the target system. 
+                    The methodology followed includes passive Open-Source Intelligence (OSINT), active service enumeration, and automated vulnerability scanning.
+                </p>
+                
+                <table class="info-table">
+                    <tr>
+                        <td>Primary Target</td>
+                        <td>auravoice.uk</td>
+                    </tr>
+                    <tr>
+                        <td>Audit Date</td>
+                        <td>March 09, 2026 - 17:02 UTC</td>
+                    </tr>
+                    <tr>
+                        <td>Security Engine</td>
+                        <td>ShadowStrike v1.0.0</td>
+                    </tr>
+                    <tr>
+                        <td>Total Findings</td>
+                        <td>8</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-header" style="text-align: center;">Security Score</h2>
+                <div class="score-circle">
+                    <div class="score-val">67</div>
+                    <div class="score-label">Out of 100</div>
+                </div>
+                
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Critical Risk</span>
+                    <span class="stat-num" style="color: var(--critical);">0</span>
+                </div>
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">High Risk</span>
+                    <span class="stat-num" style="color: var(--high);">1</span>
+                </div>
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Medium Risk</span>
+                    <span class="stat-num" style="color: var(--medium);">3</span>
+                </div>
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Low Risk</span>
+                    <span class="stat-num" style="color: var(--low);">3</span>
+                </div>
+                <div class="stat-row">
+                    <span style="color: var(--text-muted);">Info</span>
+                    <span class="stat-num" style="color: var(--info);">1</span>
+                </div>
+            </div>
+        </div>
+        
+        <h2 class="findings-title">Detailed Impact & Findings</h2>
+        
+        
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#01</span>
+                        <h3>Wildcard CORS policy (Access-Control-Allow-Origin: *)</h3>
+                    </div>
+                    <span class="badge" style="background-color: #f9731615; color: #f97316; border: 1px solid #f9731640;">
+                        HIGH
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Detection Module: HEADERS</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>VULNERABILITY DETAILS:</strong><br>
+                    <p>Any website can make cross-origin requests to your domain. This is dangerous if any authenticated endpoints exist.</p>
+                </div>
+                
+                
+                <div class="impact-block">
+                    <div class="impact-title">💸 BUSINESS RISK / IMPACT</div>
+                    <p>Malicious websites can read sensitive user data (like account details or API keys) directly from the victim's browser session across origins.</p>
+                </div>
+                
+                
+                <div class="finding-rem">
+                    <div class="rem-title">🛠️ STEP-BY-STEP REMEDIATION</div>
+                    <p>Restrict CORS to specific trusted origins.</p>
+                </div>
+            </div>
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#02</span>
+                        <h3>Missing header: X-Frame-Options</h3>
+                    </div>
+                    <span class="badge" style="background-color: #eab30815; color: #eab308; border: 1px solid #eab30840;">
+                        MEDIUM
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Detection Module: HEADERS</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>VULNERABILITY DETAILS:</strong><br>
+                    <p>Missing X-Frame-Options header. Site can be embedded in iframes, enabling clickjacking attacks.</p>
+                </div>
+                
+                
+                <div class="impact-block">
+                    <div class="impact-title">💸 BUSINESS RISK / IMPACT</div>
+                    <p>Attackers can trick your visitors into clicking hidden buttons (Clickjacking), potentially leading to unauthorized actions like deleting accounts or transferring funds.</p>
+                </div>
+                
+                
+                <div class="finding-rem">
+                    <div class="rem-title">🛠️ STEP-BY-STEP REMEDIATION</div>
+                    <p>Add header: X-Frame-Options: DENY</p>
+                </div>
+            </div>
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#03</span>
+                        <h3>Missing header: X-Content-Type-Options</h3>
+                    </div>
+                    <span class="badge" style="background-color: #eab30815; color: #eab308; border: 1px solid #eab30840;">
+                        MEDIUM
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Detection Module: HEADERS</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>VULNERABILITY DETAILS:</strong><br>
+                    <p>Missing X-Content-Type-Options header. Browser may MIME-sniff content, leading to XSS.</p>
+                </div>
+                
+                
+                <div class="impact-block">
+                    <div class="impact-title">💸 BUSINESS RISK / IMPACT</div>
+                    <p>Malicious user uploads could be interpreted as executable scripts by the browser, leading to full Cross-Site Scripting (XSS) compromises.</p>
+                </div>
+                
+                
+                <div class="finding-rem">
+                    <div class="rem-title">🛠️ STEP-BY-STEP REMEDIATION</div>
+                    <p>Add header: X-Content-Type-Options: nosniff</p>
+                </div>
+            </div>
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#04</span>
+                        <h3>Missing header: Content-Security-Policy</h3>
+                    </div>
+                    <span class="badge" style="background-color: #eab30815; color: #eab308; border: 1px solid #eab30840;">
+                        MEDIUM
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Detection Module: HEADERS</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>VULNERABILITY DETAILS:</strong><br>
+                    <p>Missing Content-Security-Policy header. No restrictions on script/resource sources.</p>
+                </div>
+                
+                
+                <div class="impact-block">
+                    <div class="impact-title">💸 BUSINESS RISK / IMPACT</div>
+                    <p>Attackers can inject malicious scripts (XSS) into the browsers of your users, stealing their session cookies, credit cards, or defacing the website.</p>
+                </div>
+                
+                
+                <div class="finding-rem">
+                    <div class="rem-title">🛠️ STEP-BY-STEP REMEDIATION</div>
+                    <p>Add a strict CSP header restricting script-src and other directives.</p>
+                </div>
+            </div>
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#05</span>
+                        <h3>Missing header: Referrer-Policy</h3>
+                    </div>
+                    <span class="badge" style="background-color: #3b82f615; color: #3b82f6; border: 1px solid #3b82f640;">
+                        LOW
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Detection Module: HEADERS</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>VULNERABILITY DETAILS:</strong><br>
+                    <p>Missing Referrer-Policy header. Full URL may leak to third parties.</p>
+                </div>
+                
+                
+                <div class="impact-block">
+                    <div class="impact-title">💸 BUSINESS RISK / IMPACT</div>
+                    <p>Sensitive tokens or internal tracking IDs in URLs might leak to third-party analytics providers or external links.</p>
+                </div>
+                
+                
+                <div class="finding-rem">
+                    <div class="rem-title">🛠️ STEP-BY-STEP REMEDIATION</div>
+                    <p>Add header: Referrer-Policy: strict-origin-when-cross-origin</p>
+                </div>
+            </div>
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#06</span>
+                        <h3>Missing header: Permissions-Policy</h3>
+                    </div>
+                    <span class="badge" style="background-color: #3b82f615; color: #3b82f6; border: 1px solid #3b82f640;">
+                        LOW
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Detection Module: HEADERS</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>VULNERABILITY DETAILS:</strong><br>
+                    <p>Missing Permissions-Policy header. No restrictions on browser features (camera, mic).</p>
+                </div>
+                
+                
+                <div class="impact-block">
+                    <div class="impact-title">💸 BUSINESS RISK / IMPACT</div>
+                    <p>If compromised, the site might silently request access to the user's camera, microphone, or location without explicit centralized restriction.</p>
+                </div>
+                
+                
+                <div class="finding-rem">
+                    <div class="rem-title">🛠️ STEP-BY-STEP REMEDIATION</div>
+                    <p>Add header: Permissions-Policy: camera=(), microphone=(), geolocation=()</p>
+                </div>
+            </div>
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#07</span>
+                        <h3>Information disclosure: Server</h3>
+                    </div>
+                    <span class="badge" style="background-color: #3b82f615; color: #3b82f6; border: 1px solid #3b82f640;">
+                        LOW
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Detection Module: HEADERS</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>VULNERABILITY DETAILS:</strong><br>
+                    <p>Server version disclosed — helps attackers fingerprint the technology. Value: Vercel</p>
+                </div>
+                
+                
+                
+                
+                <div class="finding-rem">
+                    <div class="rem-title">🛠️ STEP-BY-STEP REMEDIATION</div>
+                    <p>Remove or hide the Server response header.</p>
+                </div>
+            </div>
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#08</span>
+                        <h3>3 technologies detected</h3>
+                    </div>
+                    <span class="badge" style="background-color: #6b728015; color: #6b7280; border: 1px solid #6b728040;">
+                        INFO
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Detection Module: TECHDETECT</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>VULNERABILITY DETAILS:</strong><br>
+                    <p>Technologies: Vite, TailwindCSS, Vercel</p>
+                </div>
+                
+                
+                
+                
+                <div class="finding-rem">
+                    <div class="rem-title">🛠️ STEP-BY-STEP REMEDIATION</div>
+                    <p></p>
+                </div>
+            </div>
+        
+        <footer>
+            <div style="font-family: 'Cinzel', serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; color: var(--text-main);">SHADOWSTRIKE SECURITY</div>
+            <p>UNAUTHORIZED REPRODUCTION OR DISTRIBUTION OF THIS DOCUMENT IS STRICTLY PROHIBITED.</p>
+        </footer>
+    </div>
+</body>
+</html>

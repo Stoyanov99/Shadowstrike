@@ -1,0 +1,13 @@
+# spiderfoot Output
+# Command: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/stoyanov/Hack/tools/SpiderFoot/sf.py -s scanme.nmap.org -t INTERNET_NAME,IP_ADDRESS,EMAILADDR -q
+# Exit Code: 1
+# Duration: 0.1s
+# Retries: 1
+
+
+
+# STDERR:
+Traceback (most recent call last):
+  File "/Users/stoyanov/Hack/tools/SpiderFoot/sf.py", line 25, in <module>
+    import cherrypy
+ModuleNotFoundError: No module named 'cherrypy'

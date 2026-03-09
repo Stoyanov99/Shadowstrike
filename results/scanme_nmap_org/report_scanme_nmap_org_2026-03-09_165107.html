@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowStrike Penetration Test Report — scanme.nmap.org</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: #141414;
+            --bg-lighter: #1e1e1e;
+            --text-main: #e5e5e5;
+            --text-muted: #888888;
+            --primary: #f87171;
+            --accent: #b91c1c;
+            --border: #2a2a2a;
+            
+            --critical: #ef4444;
+            --high: #f97316;
+            --medium: #eab308;
+            --low: #3b82f6;
+            --info: #6b7280;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); line-height: 1.6; }
+        
+        /* Typography */
+        h1, h2, h3 { font-weight: 600; color: #ffffff; }
+        code, pre { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+        
+        /* Header */
+        header {
+            background: linear-gradient(to right, #110000, var(--bg-card));
+            border-bottom: 2px solid var(--accent);
+            padding: 50px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::after {
+            content: ''; position: absolute; top: 0; right: 0; width: 400px; height: 100%;
+            background: radial-gradient(circle, rgba(239,68,68,0.05) 0%, transparent 70%);
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; position: relative; z-index: 2; }
+        
+        .logo { font-size: 2.5rem; font-weight: 700; color: #fff; letter-spacing: -1px; margin-bottom: 10px; }
+        .logo span { color: var(--primary); }
+        .header-sub { color: var(--text-muted); font-size: 1.1rem; font-weight: 300; letter-spacing: 1px; text-transform: uppercase; }
+        
+        /* Main Layout */
+        .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-top: 40px; }
+        
+        /* Cards */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .card-header { font-size: 1.25rem; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        
+        /* Score & Stats */
+        .score-circle { width: 150px; height: 150px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; margin: 0 auto 20px; border: 8px solid #10b981; box-shadow: 0 0 30px #10b98130; }
+        .score-val { font-size: 2.5rem; font-weight: 700; color: #10b981; line-height: 1; }
+        .score-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-top: 5px; }
+        
+        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border); }
+        .stat-row:last-child { border: none; }
+        .stat-num { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        
+        /* Finding Cards */
+        .findings-section { margin-top: 50px; }
+        .finding-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 25px; margin-bottom: 20px; transition: transform 0.2s, border-color 0.2s; }
+        .finding-card:hover { border-color: #444; transform: translateY(-2px); }
+        
+        .finding-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .finding-title { display: flex; align-items: flex-start; gap: 15px; }
+        .finding-num { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
+        .finding-title h3 { font-size: 1.1rem; line-height: 1.4; }
+        
+        .badge { padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+        .module-badge { background: var(--bg-lighter); color: var(--text-muted); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; border: 1px solid #333; }
+        
+        .finding-meta { margin-bottom: 20px; }
+        
+        .finding-desc { color: #ccc; margin-bottom: 20px; font-size: 0.95rem; }
+        .finding-desc strong { color: #fff; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px; }
+        
+        .evidence { background: #000; border: 1px solid #333; border-radius: 6px; padding: 15px; margin-bottom: 20px; overflow-x: auto; }
+        .evidence strong { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; display: block; margin-bottom: 10px; }
+        .evidence pre { color: #a3e635; margin: 0; }
+        
+        .finding-rem { background: rgba(59, 130, 246, 0.05); border-left: 3px solid #3b82f6; padding: 15px; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+        .finding-rem strong { color: #60a5fa; font-size: 0.85rem; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        
+        /* Footer */
+        footer { margin-top: 60px; padding: 30px 0; text-align: center; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">SHADOW<span>STRIKE</span></div>
+            <div class="header-sub">Offensive Security Assessment Report</div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="grid-2">
+            <!-- Left Column: Scope & Execution Summary -->
+            <div class="card">
+                <h2 class="card-header">🎯 Executive Summary</h2>
+                <div style="margin-bottom: 25px;">
+                    <p style="color: #ccc; margin-bottom: 15px;">
+                        This confidential document contains the results of an automated security assessment performed against <strong>scanme.nmap.org</strong>.
+                        The assessment utilized multiple attack vectors including OSINT reconnaissance, service enumeration, configuration auditing, and vulnerability scanning.
+                    </p>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem;">
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 10px 0; color: var(--text-muted);">Target Systems</td>
+                            <td style="padding: 10px 0; text-align: right; font-weight: 500;">scanme.nmap.org</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 10px 0; color: var(--text-muted);">Test Date</td>
+                            <td style="padding: 10px 0; text-align: right; font-weight: 500;">March 09, 2026</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 10px 0; color: var(--text-muted);">Total Issues Identified</td>
+                            <td style="padding: 10px 0; text-align: right; font-weight: 500;">3</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Right Column: Risk & Stats -->
+            <div class="card">
+                <h2 class="card-header">📊 Risk Analysis</h2>
+                
+                <div class="score-circle">
+                    <div class="score-val">89</div>
+                    <div class="score-label">Sec Score</div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <div class="stat-row">
+                        <span style="color: var(--text-muted);">Critical Risk</span>
+                        <span class="stat-num" style="color: var(--critical);">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span style="color: var(--text-muted);">High Risk</span>
+                        <span class="stat-num" style="color: var(--high);">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span style="color: var(--text-muted);">Medium Risk</span>
+                        <span class="stat-num" style="color: var(--medium);">2</span>
+                    </div>
+                    <div class="stat-row">
+                        <span style="color: var(--text-muted);">Low Risk</span>
+                        <span class="stat-num" style="color: var(--low);">1</span>
+                    </div>
+                    <div class="stat-row">
+                        <span style="color: var(--text-muted);">Info / Recon</span>
+                        <span class="stat-num" style="color: var(--info);">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="findings-section">
+            <h2 style="font-size: 1.5rem; margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 10px;">
+                🔍 Detailed Findings
+            </h2>
+            
+            
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#1</span>
+                        <h3>Missing SPF record</h3>
+                    </div>
+                    <span class="badge" style="background-color: #eab30820; color: #eab308; border: 1px solid #eab30840;">
+                        MEDIUM
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Module: emailsec</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>Description:</strong><br>
+                    No SPF record found. Attackers can send emails impersonating your domain.
+                </div>
+                
+                
+                
+                <div class="finding-rem">
+                    <strong>Recommendation:</b><br>
+                    Add TXT record: v=spf1 include:_spf.google.com ~all
+                </div>
+            </div>
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#2</span>
+                        <h3>Missing DMARC record</h3>
+                    </div>
+                    <span class="badge" style="background-color: #eab30820; color: #eab308; border: 1px solid #eab30840;">
+                        MEDIUM
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Module: emailsec</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>Description:</strong><br>
+                    No DMARC record found. Email spoofing attacks are possible.
+                </div>
+                
+                
+                
+                <div class="finding-rem">
+                    <strong>Recommendation:</b><br>
+                    Add TXT record for _dmarc: v=DMARC1; p=quarantine; rua=mailto:dmarc@yourdomain.com
+                </div>
+            </div>
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span class="finding-num">#3</span>
+                        <h3>No DKIM record found (common selectors)</h3>
+                    </div>
+                    <span class="badge" style="background-color: #3b82f620; color: #3b82f6; border: 1px solid #3b82f640;">
+                        LOW
+                    </span>
+                </div>
+                
+                <div class="finding-meta">
+                    <span class="module-badge">Module: emailsec</span>
+                </div>
+                
+                <div class="finding-desc">
+                    <strong>Description:</strong><br>
+                    DKIM record not found for common selectors. May use a custom selector.
+                </div>
+                
+                
+                
+                <div class="finding-rem">
+                    <strong>Recommendation:</b><br>
+                    Ensure DKIM is configured with your email provider.
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div style="margin-bottom: 10px; color: #fff; font-weight: 500; letter-spacing: 1px;">SHADOWSTRIKE SECURITY</div>
+            <p>This report is highly confidential. Unauthorized distribution or duplication is strictly prohibited.</p>
+            <p style="margin-top: 5px;">Report generated automatically on 2026-03-09 16:51:07</p>
+        </footer>
+    </div>
+</body>
+</html>

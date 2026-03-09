@@ -1,0 +1,6 @@
+# subfinder Output
+# Command: subfinder -d scanme.nmap.org -silent
+# Exit Code: 0
+# Duration: 2.2s
+# Retries: 0
+
