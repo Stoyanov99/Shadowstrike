@@ -327,23 +327,23 @@ def interactive_shell(report_path: str):
                     
                 console.print(f"[dim]⚡ Executing: {shell_cmd}[/]")
                 try:
-                    # Run the command
-                    result = subprocess.run(
+                    # Run the command with real-time output
+                    process = subprocess.Popen(
                         shell_cmd, 
                         shell=True, 
                         text=True, 
-                        capture_output=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        bufsize=1,
                         env={**os.environ, "PATH": f"/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:{os.environ.get('PATH', '')}"}
                     )
                     
                     output_text = ""
-                    if result.stdout:
-                        console.print(result.stdout, end="")
-                        output_text += result.stdout
+                    for line in process.stdout:
+                        console.print(line, end="")
+                        output_text += line
                         
-                    if result.stderr:
-                        console.print(f"[bold red]{result.stderr}[/]", end="")
-                        output_text += result.stderr
+                    process.wait()
                     
                     if output_text.strip():
                         # Silently add the command and its result to the AI context
