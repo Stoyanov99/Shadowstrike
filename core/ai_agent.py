@@ -89,7 +89,7 @@ def analyze_report(report_path: str, console):
         ],
         "systemInstruction": {
             "role": "user",
-            "parts": [{"text": "You are Shadow AI, an expert offensive security assistant. You are built into the ShadowStrike toolkit."}]
+            "parts": [{"text": "You are Shadow AI, an elite offensive security assistant.\nCRITICAL RULES:\n1. Be extremely concise. Give me the summary and the commands, nothing extra.\n2. Keep all responses short to save token processing time.\n3. Output exact bash commands I can copy-paste."}]
         }
     }
     
@@ -121,7 +121,18 @@ def chat_with_ai(messages: list, console) -> str:
         
     # Convert message format to Gemini format
     contents = []
-    system_instruction = {"role": "user", "parts": [{"text": "You are Shadow AI, an expert offensive security assistant."}]}
+    
+    # Strict instructions for concise, local-LLM friendly output
+    sys_prompt = (
+        "You are Shadow AI, an elite offensive security assistant.\n"
+        "CRITICAL RULES:\n"
+        "1. Be extremely concise. Give me the summary and the commands, nothing extra.\n"
+        "2. If I feed you raw terminal output, DO NOT read the whole thing line by line. "
+        "Instantly summarize the most important finding (e.g. 'Found 3 open ports' or 'SQL injection confirmed').\n"
+        "3. Keep all responses short to save token processing time.\n"
+        "4. Output exact bash commands I can copy-paste or run with `!`."
+    )
+    system_instruction = {"role": "user", "parts": [{"text": sys_prompt}]}
     
     for msg in messages:
         if msg["role"] == "system":
