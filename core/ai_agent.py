@@ -1,6 +1,6 @@
 """
 ShadowStrike AI Agent
-Connects to Google Gemini API (1.5 Pro) to analyze reports and provide actionable attack commands.
+Connects to Google Gemini API (3.1 Pro) to analyze reports and provide actionable attack commands.
 """
 import os
 import json
@@ -11,7 +11,7 @@ from rich.panel import Panel
 from rich.markdown import Markdown
 
 # API Endpoint for Google Gemini
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent"
 
 def load_env_key():
     """Manually load API key from .env file if it exists."""
@@ -67,7 +67,7 @@ Provide your response in this format:
 """
 
 def analyze_report(report_path: str, console):
-    """Analyze the report using Google Gemini 1.5 Pro and print the result."""
+    """Analyze the report using Google Gemini 3.1 Pro and print the result."""
     api_key = load_env_key()
     
     if not api_key:
@@ -112,7 +112,7 @@ def analyze_report(report_path: str, console):
         console.print(f"[bold red]❌ AI Integration Error:[/] {str(e)}")
 
 def chat_with_ai(messages: list, console) -> str:
-    """Send a conversational turn to Gemini 1.5 Pro and return its response string."""
+    """Send a conversational turn to Gemini 3.1 Pro and return its response string."""
     api_key = load_env_key()
     
     if not api_key:
