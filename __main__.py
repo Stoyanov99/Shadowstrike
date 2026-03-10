@@ -390,17 +390,18 @@ Scan profiles:
   deep      Deep scan using AutoRecon & BBOT (slow)
   quick     Quick scan (headers, tech, secrets)
   showtime  🔴 CLI Presentation Mode (live dashboard)
+  ai        🤖 Launch Shadow AI interactive shell directly
 
 Examples:
   python -m shadowstrike scan example.com
   python -m shadowstrike osint example.com
-  python -m shadowstrike showtime example.com
+  python -m shadowstrike ai
         """,
     )
     
-    parser.add_argument("profile", choices=["scan", "recon", "vuln", "headers", "osint", "deep", "quick", "showtime"],
+    parser.add_argument("profile", choices=["scan", "recon", "vuln", "headers", "osint", "deep", "quick", "showtime", "ai"],
                         help="Scan profile to use")
-    parser.add_argument("target", help="Target domain or IP")
+    parser.add_argument("target", nargs="?", help="Target domain or IP (optional for 'ai' profile)")
     parser.add_argument("--output", "-o", help="Output directory", default=None)
     
     if len(sys.argv) == 1:
@@ -410,11 +411,19 @@ Examples:
         
     args = parser.parse_args()
     
-    print()
-    _, report_path = run_scan(target=args.target, profile=args.profile, output_dir=args.output)
-    
-    # Launch the continuous shell even if run via arguments (unless they specifically background it later)
-    interactive_shell(report_path)
+    if args.profile == "ai":
+        # Launch AI shell directly without scanning
+        print()
+        interactive_shell(None)
+    else:
+        if not args.target:
+            parser.error("The following arguments are required: target (unless using 'ai' profile)")
+            
+        print()
+        _, report_path = run_scan(target=args.target, profile=args.profile, output_dir=args.output)
+        
+        # Launch the continuous shell after scan
+        interactive_shell(report_path)
 
 if __name__ == "__main__":
     main()
