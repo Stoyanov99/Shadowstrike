@@ -35,12 +35,12 @@ class ShadowConsole:
         self._current_step = 0
         self._total_steps = 0
         
-    def print(self, text: str = ""):
+    def print(self, text: str = "", **kwargs):
         """Expose print method."""
         if HAS_RICH:
-            self.console.print(text)
+            self.console.print(text, **kwargs)
         else:
-            print(text)
+            print(text, **kwargs)
     
     def banner(self):
         """Show the ShadowStrike ASCII banner."""
