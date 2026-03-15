@@ -286,7 +286,12 @@ def interactive_shell(report_path: str):
     
     while True:
         try:
-            cmd = Prompt.ask("\n[bold red]shadowstrike[/][white]>[/]")
+            try:
+                cmd = Prompt.ask("\n[bold red]shadowstrike[/][white]>[/]")
+            except KeyboardInterrupt:
+                console.print("\n[dim]Ctrl+C detected. Terminating session. Goodbye, Operator.[/]")
+                break
+                
             cmd = cmd.strip()
             
             if not cmd:
