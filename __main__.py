@@ -14,8 +14,15 @@ import os
 import time
 import argparse
 
-# Add parent dir to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import os
+import sys
+
+# Crucial fix for Kali Linux: Ensure the parent of 'shadowstrike' is in the path
+# so that 'from shadowstrike.core import...' works when run directly.
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 from shadowstrike.core.runner import Runner
 from shadowstrike.core.opsec import check_opsec
